@@ -278,20 +278,20 @@ module.exports = function (grunt) {
                         cwd: '/styles/less',
                         src: ['**/*.less'],
                         ext: '.css',
-                        dest: '/styles',
-                    },
-                ],
-            },
+                        dest: '/styles'
+                    }
+                ]
+            }
         },
 
         typescript: {
             base: {
-                src: ['ts/**/*.ts'],
-                dest: 'js',
+                src: ['<%= yeoman.app %>/scripts/ts/**/*.ts'],
+                dest: '<%= yeoman.app %>/scripts/js/',
                 options: {
                     module: 'amd',
                     target: 'es5',
-                    base_path:'/scripts'
+                    basePath: 'app/scripts/ts'
                 }
             }
         },
