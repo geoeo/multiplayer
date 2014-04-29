@@ -18,7 +18,6 @@ export class Game extends Phaser.Game{
         this.state.add('Preloader',Preloader.Preloader,false);
         this.state.add('Arena',Arena.Arena,false);
 
-
         this.state.start('Boot');
 
     }

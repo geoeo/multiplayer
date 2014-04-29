@@ -23,7 +23,12 @@ export class Boot extends Phaser.State {
         this.stage.disableVisibilityChange = true;
 
         if(this.game.device.desktop){
+            this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
             this.scale.pageAlignHorizontally = true;
+            this.scale.pageAlignVertically = true;
+//            this.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+            // force a screen resize
+            this.scale.setScreenSize(true);
 
         }
         else {

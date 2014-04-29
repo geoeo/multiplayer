@@ -46,12 +46,12 @@ module.exports = function (grunt) {
                 tasks: ['newer:copy:styles', 'autoprefixer']
             },
             less: {
-                files: ['/styles/less/{,*/}*.less'],
+                files: ['<%= yeoman.app %>/styles/less/{,*/}*.less'],
                 tasks: ['less']
                 
             },
             typescript: {
-                 files: ['/scripts/ts/{,*/}*.ts'],
+                 files: ['<%= yeoman.app %>/scripts/ts/{,*/}*.ts'],
                  tasks: ['typescript']
             },
             livereload: {
