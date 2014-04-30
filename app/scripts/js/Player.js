@@ -7,15 +7,16 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports"], function(require, exports) {
     var Player = (function (_super) {
         __extends(Player, _super);
-        function Player(game, x, y) {
-            _super.call(this, game, x, y, 'player1', 0);
+        function Player(game, x, y, name) {
+            _super.call(this, game, x, y, name, 0);
             this.game = game;
             this.x = x;
             this.y = y;
+            this.name = name;
 
             console.log("Player.constructor");
 
-            this.anchor.setTo(0.5, 0);
+            this.anchor.setTo(0.5, 0.5);
             game.physics.enable(this, Phaser.Physics.ARCADE);
 
             this.body.collideWorldBounds = true;

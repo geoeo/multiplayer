@@ -7,12 +7,15 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, layer, layer2, player) {
+        function Arena(map, layer, layer2, player, player2, cursors, currentSpeed) {
             _super.call(this);
             this.map = map;
             this.layer = layer;
             this.layer2 = layer2;
             this.player = player;
+            this.player2 = player2;
+            this.cursors = cursors;
+            this.currentSpeed = currentSpeed;
         }
         Arena.prototype.create = function () {
             console.log("arena.create");
@@ -27,24 +30,46 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.layer.resizeWorld();
             this.layer2.resizeWorld();
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY);
+            this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1");
+            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2");
+
+            this.cursors = this.game.input.keyboard.createCursorKeys();
+
+            this.currentSpeed = 0;
+
+            this.player.angle -= 90;
         };
 
         Arena.prototype.update = function () {
+            this.game.physics.arcade.collide(this.player, this.player2);
+
             this.handleUserInput();
         };
 
         Arena.prototype.handleUserInput = function () {
-            if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-                console.log("left key press");
+            if (this.cursors.left.isDown) {
+                this.player.angle -= 4;
+            } else if (this.cursors.right.isDown) {
+                this.player.angle += 4;
+            }
 
-                this.player.body.velocity.x = -150;
-            } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-                console.log("right key press");
-
-                this.player.body.velocity.x = 150;
+            if (this.cursors.up.isDown) {
+                this.currentSpeed = 90;
+            } else if (this.cursors.down.isDown) {
+                if (this.currentSpeed > -90)
+                    this.currentSpeed -= 10;
             } else {
-                this.player.body.velocity.x = 0;
+                if (this.currentSpeed > 0) {
+                    this.currentSpeed -= 5;
+                } else if (this.currentSpeed < 0) {
+                    this.currentSpeed += 5;
+                }
+            }
+
+            if (this.currentSpeed != 0) {
+                this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
             }
         };
         return Arena;

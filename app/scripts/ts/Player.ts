@@ -5,13 +5,14 @@
 
 export class Player extends Phaser.Sprite {
 
-    constructor(public game : Phaser.Game, public x : number, public y : number){
-        super(game,x,y,'player1',0);
+    constructor(public game : Phaser.Game, public x : number, public y : number, public name : string){
+        // last arg is animation frame start - no animations at the moment
+        super(game,x,y,name,0);
 
         console.log("Player.constructor");
 
         // rotation anchor
-        this.anchor.setTo(0.5,0);
+        this.anchor.setTo(0.5,0.5);
         game.physics.enable(this,Phaser.Physics.ARCADE);
 
         //setup physics

@@ -11,7 +11,7 @@ export class Preloader extends Phaser.State {
     preload() {
         // loaded it into cache during Boot.ts execution
         console.log("Preloader.preload");
-        this.preloadBar = this.add.sprite(this.game.world.centerX-150,this.game.world.centerY,"preloadBar");
+        this.preloadBar = this.add.sprite(this.game.world.centerX-170,this.game.world.centerY,"preloadBar");
         this.load.setPreloadSprite(this.preloadBar);
 
         // load game assets

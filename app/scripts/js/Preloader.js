@@ -13,7 +13,7 @@ define(["require", "exports"], function(require, exports) {
         }
         Preloader.prototype.preload = function () {
             console.log("Preloader.preload");
-            this.preloadBar = this.add.sprite(this.game.world.centerX - 150, this.game.world.centerY, "preloadBar");
+            this.preloadBar = this.add.sprite(this.game.world.centerX - 170, this.game.world.centerY, "preloadBar");
             this.load.setPreloadSprite(this.preloadBar);
 
             this.load.image("player1", "/assets/images/player1.png", false);

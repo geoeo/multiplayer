@@ -10,7 +10,10 @@ export class Arena extends Phaser.State {
     constructor(public map : Phaser.Tilemap ,
                 public layer : Phaser.TilemapLayer,
                 public layer2 : Phaser.TilemapLayer,
-                public player : Phaser.Sprite){
+                public player : Phaser.Sprite,
+                public player2 : Phaser.Sprite,
+                public cursors : Phaser.CursorKeys,
+                public currentSpeed : number){
         super();
     }
 
@@ -32,34 +35,67 @@ export class Arena extends Phaser.State {
         this.layer.resizeWorld();
         this.layer2.resizeWorld();
 
-        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY);
+        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
+        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1");
+        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2");
+
+        this.cursors = this.game.input.keyboard.createCursorKeys();
+
+        this.currentSpeed = 0;
+
+        // rotate so that key controls match up
+        this.player.angle -= 90;
 
     }
 
     update(){
 
-        this.handleUserInput();
+        //  Collide the player with the platforms
+        this.game.physics.arcade.collide(this.player, this.player2);
 
+        this.handleUserInput();
     }
 
-    private handleUserInput() {
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-            console.log("left key press");
+    private handleUserInput(){
 
-            this.player.body.velocity.x = -150;
+        if (this.cursors.left.isDown)
+        {
+            this.player.angle -= 4;
+        }
+        else if (this.cursors.right.isDown)
+        {
+            this.player.angle += 4;
         }
 
-        else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-
-            console.log("right key press");
-
-            this.player.body.velocity.x = 150;
-
-        }
-        else {
-            this.player.body.velocity.x = 0;
+        if (this.cursors.up.isDown)
+        {
+            //  The speed we'll travel at
+            this.currentSpeed = 90;
         }
 
+        else if (this.cursors.down.isDown){
+            if(this.currentSpeed > -90)
+                this.currentSpeed -= 10;
+        }
+
+        else
+        {
+            if (this.currentSpeed > 0)
+            {
+                this.currentSpeed -= 5;
+            }
+
+            else if (this.currentSpeed < 0) {
+                this.currentSpeed += 5;
+            }
+        }
+
+        if (this.currentSpeed != 0)
+        {
+            this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
+        }
     }
 
 
