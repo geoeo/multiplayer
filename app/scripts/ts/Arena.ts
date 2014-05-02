@@ -8,8 +8,8 @@ export class Arena extends Phaser.State {
 
     // global vars
     constructor(public map : Phaser.Tilemap ,
-                public layer : Phaser.TilemapLayer,
-                public layer2 : Phaser.TilemapLayer,
+                public groundLayer : Phaser.TilemapLayer,
+                public arenaLayer : Phaser.TilemapLayer,
                 public player : Phaser.Sprite,
                 public player2 : Phaser.Sprite,
                 public cursors : Phaser.CursorKeys,
@@ -26,17 +26,26 @@ export class Arena extends Phaser.State {
         // @arg1 : name of tileset in .json , @arg2 tileset key in phaser
         this.map.addTilesetImage('tileset','tiles');
 
-        //  Creates a layer from the World1 layer in the map data.
+        //  Creates a groundLayer from the World1 groundLayer in the map data.
         //  A Layer is effectively like a Phaser.Sprite, so is added to the display list.
-        this.layer = this.map.createLayer('Ground');
-        this.layer2 = this.map.createLayer('Arena');
+        this.groundLayer = this.map.createLayer('Ground');
+        this.arenaLayer = this.map.createLayer('Arena');
 
-        //  This resizes the game world to match the layer dimensions
-        this.layer.resizeWorld();
-        this.layer2.resizeWorld();
+        //  This resizes the game world to match the groundLayer dimensions
+        this.groundLayer.resizeWorld();
+        this.arenaLayer.resizeWorld();
+
+        var groundTiles : Phaser.Tile[]  = this.groundLayer.getTiles(0,0,this.game.world.width,this.game.world.height);
+
+        for(var i : number = 0; i < groundTiles.length; i++ ){
+                groundTiles[i].setCollisionCallback(function(){
+                    console.log("dead");
+                },this);
+        }
+
+        //// PLAYER STUFF //////
 
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
 
         this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1");
         this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2");
@@ -54,6 +63,7 @@ export class Arena extends Phaser.State {
 
         //  Collide the player with the platforms
         this.game.physics.arcade.collide(this.player, this.player2);
+        this.game.physics.arcade.overlap(this.player, this.groundLayer);
 
         this.handleUserInput();
     }

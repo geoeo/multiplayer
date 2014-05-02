@@ -7,11 +7,11 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, layer, layer2, player, player2, cursors, currentSpeed) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed) {
             _super.call(this);
             this.map = map;
-            this.layer = layer;
-            this.layer2 = layer2;
+            this.groundLayer = groundLayer;
+            this.arenaLayer = arenaLayer;
             this.player = player;
             this.player2 = player2;
             this.cursors = cursors;
@@ -24,11 +24,19 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.map.addTilesetImage('tileset', 'tiles');
 
-            this.layer = this.map.createLayer('Ground');
-            this.layer2 = this.map.createLayer('Arena');
+            this.groundLayer = this.map.createLayer('Ground');
+            this.arenaLayer = this.map.createLayer('Arena');
 
-            this.layer.resizeWorld();
-            this.layer2.resizeWorld();
+            this.groundLayer.resizeWorld();
+            this.arenaLayer.resizeWorld();
+
+            var groundTiles = this.groundLayer.getTiles(0, 0, this.game.world.width, this.game.world.height);
+
+            for (var i = 0; i < groundTiles.length; i++) {
+                groundTiles[i].setCollisionCallback(function () {
+                    console.log("dead");
+                }, this);
+            }
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -44,6 +52,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.update = function () {
             this.game.physics.arcade.collide(this.player, this.player2);
+            this.game.physics.arcade.overlap(this.player, this.groundLayer);
 
             this.handleUserInput();
         };
