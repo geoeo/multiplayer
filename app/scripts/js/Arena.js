@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, playerOneShouldDie, deathTimer) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -16,9 +16,13 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.player2 = player2;
             this.cursors = cursors;
             this.currentSpeed = currentSpeed;
+            this.playerOneShouldDie = playerOneShouldDie;
+            this.deathTimer = deathTimer;
         }
         Arena.prototype.create = function () {
             console.log("arena.create");
+
+            this.deathTimer = new Phaser.Timer(this.game, false);
 
             this.map = this.game.add.tilemap('map');
 
@@ -33,9 +37,12 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             var groundTiles = this.groundLayer.getTiles(0, 0, this.game.world.width, this.game.world.height);
 
             for (var i = 0; i < groundTiles.length; i++) {
-                groundTiles[i].setCollisionCallback(function () {
-                    console.log("dead");
-                }, this);
+                groundTiles[i].setCollisionCallback(this.groundTileCollisionHandler, this);
+            }
+            var arenaTiles = this.arenaLayer.getTiles(0, 0, this.game.world.width, this.game.world.height);
+
+            for (var i = 0; i < arenaTiles.length; i++) {
+                arenaTiles[i].setCollisionCallback(this.arenaTileCollisionHandler, this);
             }
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -48,11 +55,13 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
+            this.playerOneShouldDie = false;
         };
 
         Arena.prototype.update = function () {
             this.game.physics.arcade.collide(this.player, this.player2);
             this.game.physics.arcade.overlap(this.player, this.groundLayer);
+            this.game.physics.arcade.overlap(this.player, this.arenaLayer);
 
             this.handleUserInput();
         };
@@ -80,6 +89,24 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             if (this.currentSpeed != 0) {
                 this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
             }
+        };
+
+        Arena.prototype.groundTileCollisionHandler = function () {
+            this.game.time.events.add(15000, function () {
+                console.log("execute callback");
+                this.playerOneShouldDie = true;
+            }, this);
+
+            if (this.playerOneShouldDie) {
+                console.log("dead");
+                this.player.kill();
+                this.game.state.start("GameOver", true, false);
+            }
+        };
+
+        Arena.prototype.arenaTileCollisionHandler = function () {
+            console.log("reset player death flag");
+            this.playerOneShouldDie = false;
         };
         return Arena;
     })(Phaser.State);

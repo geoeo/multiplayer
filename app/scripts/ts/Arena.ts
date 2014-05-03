@@ -13,13 +13,18 @@ export class Arena extends Phaser.State {
                 public player : Phaser.Sprite,
                 public player2 : Phaser.Sprite,
                 public cursors : Phaser.CursorKeys,
-                public currentSpeed : number){
+                public currentSpeed : number,
+                public playerOneShouldDie : boolean,
+                public deathTimer : Phaser.Timer){
         super();
     }
 
     create() {
 
         console.log("arena.create");
+
+        // don't auto destory
+        this.deathTimer = new Phaser.Timer(this.game,false);
 
         this.map = this.game.add.tilemap('map');
         // add tiles to the tileset
@@ -38,9 +43,12 @@ export class Arena extends Phaser.State {
         var groundTiles : Phaser.Tile[]  = this.groundLayer.getTiles(0,0,this.game.world.width,this.game.world.height);
 
         for(var i : number = 0; i < groundTiles.length; i++ ){
-                groundTiles[i].setCollisionCallback(function(){
-                    console.log("dead");
-                },this);
+                groundTiles[i].setCollisionCallback(this.groundTileCollisionHandler,this);
+        }
+        var arenaTiles : Phaser.Tile[]  = this.arenaLayer.getTiles(0,0,this.game.world.width,this.game.world.height);
+
+        for(var i : number = 0; i < arenaTiles.length; i++ ){
+                arenaTiles[i].setCollisionCallback(this.arenaTileCollisionHandler,this);
         }
 
         //// PLAYER STUFF //////
@@ -56,6 +64,7 @@ export class Arena extends Phaser.State {
 
         // rotate so that key controls match up
         this.player.angle -= 90;
+        this.playerOneShouldDie = false;
 
     }
 
@@ -64,6 +73,7 @@ export class Arena extends Phaser.State {
         //  Collide the player with the platforms
         this.game.physics.arcade.collide(this.player, this.player2);
         this.game.physics.arcade.overlap(this.player, this.groundLayer);
+        this.game.physics.arcade.overlap(this.player, this.arenaLayer);
 
         this.handleUserInput();
     }
@@ -107,6 +117,27 @@ export class Arena extends Phaser.State {
             this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
         }
     }
+
+    private groundTileCollisionHandler(){
+
+        this.game.time.events.add(15000,function(){
+            console.log("execute callback");
+            this.playerOneShouldDie = true;
+        },this);
+
+        if(this.playerOneShouldDie){
+            console.log("dead");
+            this.player.kill();
+            this.game.state.start("GameOver",true,false);
+        }
+    }
+
+    private arenaTileCollisionHandler(){
+//        this.game.time.events.r;
+        console.log("reset player death flag");
+        this.playerOneShouldDie = false;
+    }
+
 
 
 }

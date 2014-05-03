@@ -19,7 +19,7 @@ define(["require", "exports"], function(require, exports) {
             this.load.image("player1", "/assets/images/player1.png", false);
             this.load.image("player2", "/assets/images/player2.png", false);
 
-            this.game.load.tilemap('map', 'assets/moba.json', null, Phaser.Tilemap.TILED_JSON);
+            this.game.load.tilemap('map', 'assets/moba_nicki.json', null, Phaser.Tilemap.TILED_JSON);
 
             this.game.load.image('tiles', 'assets/tileset.png');
         };

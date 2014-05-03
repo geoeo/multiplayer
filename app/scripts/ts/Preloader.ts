@@ -18,7 +18,7 @@ export class Preloader extends Phaser.State {
         this.load.image("player1","/assets/images/player1.png",false);
         this.load.image("player2","/assets/images/player2.png",false);
         // Load the 'map.json' file using the TILDED_JSON special flag
-        this.game.load.tilemap('map', 'assets/moba.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.tilemap('map', 'assets/moba_nicki.json', null, Phaser.Tilemap.TILED_JSON);
         // Load the tileset
         this.game.load.image('tiles', 'assets/tileset.png');
 
