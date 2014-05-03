@@ -120,10 +120,13 @@ export class Arena extends Phaser.State {
 
     private groundTileCollisionHandler(){
 
-        this.game.time.events.add(15000,function(){
-            console.log("execute callback");
+        console.log("ground collision");
+
+        this.game.time.events.add(3000,function(){
             this.playerOneShouldDie = true;
         },this);
+
+        this.game.time.events.start();
 
         if(this.playerOneShouldDie){
             console.log("dead");
@@ -133,8 +136,8 @@ export class Arena extends Phaser.State {
     }
 
     private arenaTileCollisionHandler(){
-//        this.game.time.events.r;
-        console.log("reset player death flag");
+        console.log("arena collision");
+        this.game.time.events.stop();
         this.playerOneShouldDie = false;
     }
 

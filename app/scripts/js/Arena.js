@@ -92,10 +92,14 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.groundTileCollisionHandler = function () {
-            this.game.time.events.add(15000, function () {
+            console.log("ground collision");
+
+            this.game.time.events.add(3000, function () {
                 console.log("execute callback");
                 this.playerOneShouldDie = true;
             }, this);
+
+            this.game.time.events.start();
 
             if (this.playerOneShouldDie) {
                 console.log("dead");
@@ -105,7 +109,8 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.arenaTileCollisionHandler = function () {
-            console.log("reset player death flag");
+            console.log("arena collision");
+            this.game.time.events.stop();
             this.playerOneShouldDie = false;
         };
         return Arena;
