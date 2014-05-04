@@ -80,6 +80,13 @@ export class Arena extends Phaser.State {
 
     private handleUserInput(){
 
+        // TODO yoyo tween not working
+        if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){
+            this.game.add.tween(this.player.scale).to({x : 2.0, y : 2.0},300,Phaser.Easing.Linear.None,true,0,0,false)
+                .to({x : 1.0, y : 1.0},300,Phaser.Easing.Linear.None,true,0,0,false)
+                .start();
+        }
+
         if (this.cursors.left.isDown)
         {
             this.player.angle -= 4;
@@ -122,7 +129,7 @@ export class Arena extends Phaser.State {
 
         console.log("ground collision");
 
-        this.game.time.events.add(3000,function(){
+        this.game.time.events.add(2000,function(){
             this.playerOneShouldDie = true;
         },this);
 
@@ -130,8 +137,11 @@ export class Arena extends Phaser.State {
 
         if(this.playerOneShouldDie){
             console.log("dead");
-            this.player.kill();
-            this.game.state.start("GameOver",true,false);
+
+            var tween = this.game.add.tween(this.player.scale).to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
+            tween.onStart.add(this.continuallyRotate,this);
+            tween.onComplete.add(this.playerOneDies,this);
+
         }
     }
 
@@ -139,6 +149,17 @@ export class Arena extends Phaser.State {
         console.log("arena collision");
         this.game.time.events.stop();
         this.playerOneShouldDie = false;
+    }
+
+    private playerOneDies(){
+            this.player.kill();
+            this.game.state.start("GameOver",true,false);
+    }
+
+    private continuallyRotate(){
+
+        this.player.angle += 4;
+
     }
 
 

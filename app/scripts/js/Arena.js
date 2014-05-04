@@ -67,6 +67,10 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.handleUserInput = function () {
+            if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+                this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).to({ x: 1.0, y: 1.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).start();
+            }
+
             if (this.cursors.left.isDown) {
                 this.player.angle -= 4;
             } else if (this.cursors.right.isDown) {
@@ -94,8 +98,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         Arena.prototype.groundTileCollisionHandler = function () {
             console.log("ground collision");
 
-            this.game.time.events.add(3000, function () {
-                console.log("execute callback");
+            this.game.time.events.add(2000, function () {
                 this.playerOneShouldDie = true;
             }, this);
 
@@ -103,8 +106,10 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             if (this.playerOneShouldDie) {
                 console.log("dead");
-                this.player.kill();
-                this.game.state.start("GameOver", true, false);
+
+                var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
+                tween.onStart.add(this.continuallyRotate, this);
+                tween.onComplete.add(this.playerOneDies, this);
             }
         };
 
@@ -112,6 +117,15 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             console.log("arena collision");
             this.game.time.events.stop();
             this.playerOneShouldDie = false;
+        };
+
+        Arena.prototype.playerOneDies = function () {
+            this.player.kill();
+            this.game.state.start("GameOver", true, false);
+        };
+
+        Arena.prototype.continuallyRotate = function () {
+            this.player.angle += 4;
         };
         return Arena;
     })(Phaser.State);
