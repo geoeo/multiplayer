@@ -5,7 +5,11 @@
 
 export class Player extends Phaser.Sprite {
 
-    constructor(public game : Phaser.Game, public x : number, public y : number, public name : string){
+    constructor(public game : Phaser.Game,
+                public x : number,
+                public y : number,
+                public name : string,
+                public isJumping : boolean){
         // last arg is animation frame start - no animations at the moment
         super(game,x,y,name,0);
 
@@ -21,7 +25,10 @@ export class Player extends Phaser.Sprite {
 
         game.add.existing(this);
 
+    }
 
+    toggleJumping(){
+        this.isJumping = !this.isJumping;
     }
 
 

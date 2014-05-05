@@ -47,8 +47,8 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1");
-            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2");
+            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", false);
+            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", false);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -67,8 +67,12 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.handleUserInput = function () {
-            if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+            if (this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)) {
+                this.player.toggleJumping();
+
                 this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).to({ x: 1.0, y: 1.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).start();
+            } else if (this.game.input.keyboard.justReleased(Phaser.Keyboard.SPACEBAR)) {
+                this.player.toggleJumping();
             }
 
             if (this.cursors.left.isDown) {
@@ -96,27 +100,31 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.groundTileCollisionHandler = function () {
-            console.log("ground collision");
+            if (!this.player.isJumping) {
+                console.log("ground collision");
 
-            this.game.time.events.add(2000, function () {
-                this.playerOneShouldDie = true;
-            }, this);
+                this.game.time.events.add(2000, function () {
+                    this.playerOneShouldDie = true;
+                }, this);
 
-            this.game.time.events.start();
+                this.game.time.events.start();
 
-            if (this.playerOneShouldDie) {
-                console.log("dead");
+                if (this.playerOneShouldDie) {
+                    console.log("dead");
 
-                var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
-                tween.onStart.add(this.continuallyRotate, this);
-                tween.onComplete.add(this.playerOneDies, this);
+                    var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
+                    tween.onStart.add(this.continuallyRotate, this);
+                    tween.onComplete.add(this.playerOneDies, this);
+                }
             }
         };
 
         Arena.prototype.arenaTileCollisionHandler = function () {
-            console.log("arena collision");
-            this.game.time.events.stop();
-            this.playerOneShouldDie = false;
+            if (!this.player.isJumping) {
+                console.log("arena collision");
+                this.game.time.events.stop();
+                this.playerOneShouldDie = false;
+            }
         };
 
         Arena.prototype.playerOneDies = function () {

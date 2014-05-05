@@ -7,12 +7,13 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports"], function(require, exports) {
     var Player = (function (_super) {
         __extends(Player, _super);
-        function Player(game, x, y, name) {
+        function Player(game, x, y, name, isJumping) {
             _super.call(this, game, x, y, name, 0);
             this.game = game;
             this.x = x;
             this.y = y;
             this.name = name;
+            this.isJumping = isJumping;
 
             console.log("Player.constructor");
 
@@ -23,6 +24,9 @@ define(["require", "exports"], function(require, exports) {
 
             game.add.existing(this);
         }
+        Player.prototype.toggleJumping = function () {
+            this.isJumping = !this.isJumping;
+        };
         return Player;
     })(Phaser.Sprite);
     exports.Player = Player;
