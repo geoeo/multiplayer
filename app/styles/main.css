@@ -1,0 +1,7 @@
+#player_fuel {
+  position: fixed;
+  top: 50px;
+  right: 5px;
+  color: darkgreen;
+  width: 90px;
+}

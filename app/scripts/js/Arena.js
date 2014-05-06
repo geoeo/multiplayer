@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, playerOneShouldDie, deathTimer) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -16,9 +16,21 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.player2 = player2;
             this.cursors = cursors;
             this.currentSpeed = currentSpeed;
-            this.playerOneShouldDie = playerOneShouldDie;
             this.deathTimer = deathTimer;
+            this.websocket = websocket;
         }
+        Arena.prototype.preload = function () {
+            this.websocket = new WebSocket("ws://localhost:9000/testSocket");
+
+            this.websocket.onopen = function (evt) {
+                console.log(evt.data);
+            };
+
+            this.websocket.onclose = function () {
+                console.log("connections was closed");
+            };
+        };
+
         Arena.prototype.create = function () {
             console.log("arena.create");
 
@@ -47,18 +59,23 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", false);
-            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", false);
+            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, false, false);
+            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, false, false);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
 
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
-            this.playerOneShouldDie = false;
+
+            if (this.websocket.readyState === 1)
+                this.websocket.send("multiplayer - ready to receive player positions");
         };
 
         Arena.prototype.update = function () {
+            if (this.websocket.readyState === 1)
+                this.websocket.send("multiplayer - update");
+
             this.game.physics.arcade.collide(this.player, this.player2);
             this.game.physics.arcade.overlap(this.player, this.groundLayer);
             this.game.physics.arcade.overlap(this.player, this.arenaLayer);
@@ -103,13 +120,13 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             if (!this.player.isJumping) {
                 console.log("ground collision");
 
-                this.game.time.events.add(2000, function () {
-                    this.playerOneShouldDie = true;
-                }, this);
+                this.game.time.events.add(1000, function (player) {
+                    player.decreaseFuel();
+                }, this, this.player);
 
                 this.game.time.events.start();
 
-                if (this.playerOneShouldDie) {
+                if (this.player.isDead()) {
                     console.log("dead");
 
                     var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
@@ -123,12 +140,13 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             if (!this.player.isJumping) {
                 console.log("arena collision");
                 this.game.time.events.stop();
-                this.playerOneShouldDie = false;
+                this.player.resetFuel();
             }
         };
 
         Arena.prototype.playerOneDies = function () {
             this.player.kill();
+            this.websocket.close();
             this.game.state.start("GameOver", true, false);
         };
 

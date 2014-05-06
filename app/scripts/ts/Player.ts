@@ -9,7 +9,9 @@ export class Player extends Phaser.Sprite {
                 public x : number,
                 public y : number,
                 public name : string,
-                public isJumping : boolean){
+                public fuel : number,
+                public isJumping : boolean,
+                public shouldDie : boolean){
         // last arg is animation frame start - no animations at the moment
         super(game,x,y,name,0);
 
@@ -20,7 +22,6 @@ export class Player extends Phaser.Sprite {
         game.physics.enable(this,Phaser.Physics.ARCADE);
 
         //setup physics
-//        this.body.gravity.y = 6;
         this.body.collideWorldBounds = true;
 
         game.add.existing(this);
@@ -29,6 +30,25 @@ export class Player extends Phaser.Sprite {
 
     toggleJumping(){
         this.isJumping = !this.isJumping;
+    }
+
+    decreaseFuel(){
+        console.log("Player - decrease fuel");
+
+        if(this.fuel > 0)
+            this.fuel--;
+        else if(this.fuel === 0)
+            this.shouldDie = true;
+
+    }
+
+    resetFuel(){
+        console.log("Player - reset fuel");
+        this.fuel = 3;
+    }
+
+    isDead() {
+        return this.shouldDie;
     }
 
 

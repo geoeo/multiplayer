@@ -14,9 +14,26 @@ export class Arena extends Phaser.State {
                 public player2 : Player.Player,
                 public cursors : Phaser.CursorKeys,
                 public currentSpeed : number,
-                public playerOneShouldDie : boolean,
-                public deathTimer : Phaser.Timer){
+                public deathTimer : Phaser.Timer,
+                public websocket){
         super();
+
+
+    }
+
+    preload() {
+        this.websocket = new WebSocket("ws://localhost:9000/testSocket");
+
+        this.websocket.onopen = function(evt) {
+
+            console.log(evt.data);
+
+        };
+
+        this.websocket.onclose = function() {
+            console.log("connections was closed");
+        };
+
     }
 
     create() {
@@ -55,8 +72,8 @@ export class Arena extends Phaser.State {
 
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",false);
-        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",false);
+        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,false,false);
+        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,false,false);
 
         this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -64,11 +81,19 @@ export class Arena extends Phaser.State {
 
         // rotate so that key controls match up
         this.player.angle -= 90;
-        this.playerOneShouldDie = false;
+//        this.playerOneShouldDie = false;
+
+
+        if(this.websocket.readyState === 1 )
+            this.websocket.send("multiplayer - ready to receive player positions")
+
 
     }
 
     update(){
+
+        if(this.websocket.readyState === 1 )
+            this.websocket.send("multiplayer - update");
 
         //  Collide the player with the platforms
         this.game.physics.arcade.collide(this.player, this.player2);
@@ -88,7 +113,6 @@ export class Arena extends Phaser.State {
                 .to({x : 1.0, y : 1.0},300,Phaser.Easing.Linear.None,true,0,0,false)
                 .start();
         } else if (this.game.input.keyboard.justReleased(Phaser.Keyboard.SPACEBAR)){
-            // TODO fix jump toggle on button release
             this.player.toggleJumping();
         }
 
@@ -136,13 +160,13 @@ export class Arena extends Phaser.State {
 
             console.log("ground collision");
 
-            this.game.time.events.add(2000,function(){
-                this.playerOneShouldDie = true;
-            },this);
+            this.game.time.events.add(1000,function(player){
+                player.decreaseFuel();
+            },this,this.player);
 
             this.game.time.events.start();
 
-            if(this.playerOneShouldDie){
+            if(this.player.isDead()){
                 console.log("dead");
 
                 var tween = this.game.add.tween(this.player.scale).to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
@@ -160,13 +184,15 @@ export class Arena extends Phaser.State {
 
             console.log("arena collision");
             this.game.time.events.stop();
-            this.playerOneShouldDie = false;
+            this.player.resetFuel();
 
         }
     }
 
     private playerOneDies(){
+
             this.player.kill();
+            this.websocket.close();
             this.game.state.start("GameOver",true,false);
     }
 
@@ -175,6 +201,7 @@ export class Arena extends Phaser.State {
         this.player.angle += 4;
 
     }
+
 
 
 
