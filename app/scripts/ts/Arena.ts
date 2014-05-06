@@ -15,7 +15,10 @@ export class Arena extends Phaser.State {
                 public cursors : Phaser.CursorKeys,
                 public currentSpeed : number,
                 public deathTimer : Phaser.Timer,
-                public websocket){
+                public websocket,
+                public jump_sound : Phaser.Sound,
+                public splash_sound : Phaser.Sound,
+                public jump_tween : Phaser.Tween){
         super();
 
 
@@ -33,6 +36,9 @@ export class Arena extends Phaser.State {
         this.websocket.onclose = function() {
             console.log("connections was closed");
         };
+
+        this.jump_sound = this.add.audio("jump_sound",1.0,false);
+        this.splash_sound = this.add.audio("splash_sound",1.0,false);
 
     }
 
@@ -72,8 +78,8 @@ export class Arena extends Phaser.State {
 
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,false,false);
-        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,false,false);
+        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,150,false,false);
+        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,150,false,false);
 
         this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -83,9 +89,12 @@ export class Arena extends Phaser.State {
         this.player.angle -= 90;
 //        this.playerOneShouldDie = false;
 
+        // ANIMATION STUFF ///
+
+        this.jump_tween = this.game.add.tween(this.player.scale);
 
         if(this.websocket.readyState === 1 )
-            this.websocket.send("multiplayer - ready to receive player positions")
+            this.websocket.send("multiplayer - ready to receive player positions");
 
 
     }
@@ -105,15 +114,30 @@ export class Arena extends Phaser.State {
 
     private handleUserInput(){
 
-        // TODO yoyo tween not working
-        if(this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)){
-            this.player.toggleJumping();
+        // TODO decouple jumping from playing sound ( fix jumping when pressed longer - include timer)
 
-            this.game.add.tween(this.player.scale).to({x : 2.0, y : 2.0},300,Phaser.Easing.Linear.None,true,0,0,false)
-                .to({x : 1.0, y : 1.0},300,Phaser.Easing.Linear.None,true,0,0,false)
-                .start();
+        if(this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)){
+            console.log("jump");
+            this.player.setJumpingTo(true);
+
+//            if(!this.jump_tween.isRunning){
+//                this.jump_tween
+//                    .to({x : 2.0, y : 2.0},300,Phaser.Easing.Linear.None,false,0,0,false)
+//                    .to({x : 1.0, y : 1.0},300,Phaser.Easing.Linear.None,false,0,0,false)
+//                    .start();
+//            }
+
+            if(!this.jump_sound.isPlaying){
+                this.jump_sound.play();
+                this.game.add.tween(this.player.scale).to({x : 2.0, y : 2.0},300,Phaser.Easing.Linear.None,true,0,1,true)
+                    .start();
+            }
+
+
+
         } else if (this.game.input.keyboard.justReleased(Phaser.Keyboard.SPACEBAR)){
-            this.player.toggleJumping();
+            this.player.setJumpingTo(false);
+
         }
 
         if (this.cursors.left.isDown)
@@ -158,22 +182,22 @@ export class Arena extends Phaser.State {
 
         if(!this.player.isJumping) {
 
-            console.log("ground collision");
+//            console.log("ground collision");
 
             this.game.time.events.add(1000,function(player){
+                //TODO function execution is buggy
                 player.decreaseFuel();
+
             },this,this.player);
 
             this.game.time.events.start();
 
             if(this.player.isDead()){
-                console.log("dead");
-
-                var tween = this.game.add.tween(this.player.scale).to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
-                tween.onStart.add(this.continuallyRotate,this);
-                tween.onComplete.add(this.playerOneDies,this);
-
+                if(!this.splash_sound.isPlaying)
+                    this.splash_sound.play();
+                this.playerOneDies();
             }
+
 
         }
     }
@@ -182,7 +206,7 @@ export class Arena extends Phaser.State {
 
         if(!this.player.isJumping){
 
-            console.log("arena collision");
+//            console.log("arena collision");
             this.game.time.events.stop();
             this.player.resetFuel();
 
@@ -191,9 +215,17 @@ export class Arena extends Phaser.State {
 
     private playerOneDies(){
 
-            this.player.kill();
-            this.websocket.close();
-            this.game.state.start("GameOver",true,false);
+        var tween = this.game.add.tween(this.player.scale).to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
+        tween.onStart.add(this.continuallyRotate,this);
+        tween.onComplete.add(this.shutDownGame,this);
+    }
+
+    private shutDownGame() {
+
+        this.player.kill();
+        this.websocket.close();
+        this.game.state.start("GameOver",true,false);
+
     }
 
     private continuallyRotate(){

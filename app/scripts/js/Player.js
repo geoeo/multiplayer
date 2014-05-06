@@ -7,13 +7,14 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports"], function(require, exports) {
     var Player = (function (_super) {
         __extends(Player, _super);
-        function Player(game, x, y, name, fuel, isJumping, shouldDie) {
+        function Player(game, x, y, name, fuel, max_fuel_width, isJumping, shouldDie) {
             _super.call(this, game, x, y, name, 0);
             this.game = game;
             this.x = x;
             this.y = y;
             this.name = name;
             this.fuel = fuel;
+            this.max_fuel_width = max_fuel_width;
             this.isJumping = isJumping;
             this.shouldDie = shouldDie;
 
@@ -26,12 +27,15 @@ define(["require", "exports"], function(require, exports) {
 
             game.add.existing(this);
         }
-        Player.prototype.toggleJumping = function () {
-            this.isJumping = !this.isJumping;
+        Player.prototype.setJumpingTo = function (value) {
+            this.isJumping = value;
         };
 
         Player.prototype.decreaseFuel = function () {
-            console.log("Player - decrease fuel");
+            var decrease_fuel_by = this.max_fuel_width / 3;
+            var new_width = $("#player_fuel_image").width() - decrease_fuel_by;
+
+            $('#player_fuel_image').css("width", new_width);
 
             if (this.fuel > 0)
                 this.fuel--;
@@ -40,7 +44,7 @@ define(["require", "exports"], function(require, exports) {
         };
 
         Player.prototype.resetFuel = function () {
-            console.log("Player - reset fuel");
+            $("#player_fuel_image").css("width", this.max_fuel_width);
             this.fuel = 3;
         };
 

@@ -4,8 +4,16 @@
 
 export class GameOver extends Phaser.State {
 
+    constructor(public game_over_sound : Phaser.Sound){
+        super();
+    }
+
+    preload(){
+        this.game_over_sound = this.add.audio("game_over_sound",1.0,false);
+    }
 
     create(){
+        this.game_over_sound.play();
         alert("GameOver");
     }
 }

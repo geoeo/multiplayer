@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -18,6 +18,9 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.currentSpeed = currentSpeed;
             this.deathTimer = deathTimer;
             this.websocket = websocket;
+            this.jump_sound = jump_sound;
+            this.splash_sound = splash_sound;
+            this.jump_tween = jump_tween;
         }
         Arena.prototype.preload = function () {
             this.websocket = new WebSocket("ws://localhost:9000/testSocket");
@@ -29,6 +32,9 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.websocket.onclose = function () {
                 console.log("connections was closed");
             };
+
+            this.jump_sound = this.add.audio("jump_sound", 1.0, false);
+            this.splash_sound = this.add.audio("splash_sound", 1.0, false);
         };
 
         Arena.prototype.create = function () {
@@ -59,14 +65,16 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, false, false);
-            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, false, false);
+            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, 150, false, false);
+            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, 150, false, false);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
 
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
+
+            this.jump_tween = this.game.add.tween(this.player.scale);
 
             if (this.websocket.readyState === 1)
                 this.websocket.send("multiplayer - ready to receive player positions");
@@ -85,11 +93,15 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.handleUserInput = function () {
             if (this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)) {
-                this.player.toggleJumping();
+                console.log("jump");
+                this.player.setJumpingTo(true);
 
-                this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).to({ x: 1.0, y: 1.0 }, 300, Phaser.Easing.Linear.None, true, 0, 0, false).start();
+                if (!this.jump_sound.isPlaying) {
+                    this.jump_sound.play();
+                    this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, 300, Phaser.Easing.Linear.None, true, 0, 1, true).start();
+                }
             } else if (this.game.input.keyboard.justReleased(Phaser.Keyboard.SPACEBAR)) {
-                this.player.toggleJumping();
+                this.player.setJumpingTo(false);
             }
 
             if (this.cursors.left.isDown) {
@@ -118,8 +130,6 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.groundTileCollisionHandler = function () {
             if (!this.player.isJumping) {
-                console.log("ground collision");
-
                 this.game.time.events.add(1000, function (player) {
                     player.decreaseFuel();
                 }, this, this.player);
@@ -127,24 +137,27 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
                 this.game.time.events.start();
 
                 if (this.player.isDead()) {
-                    console.log("dead");
-
-                    var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
-                    tween.onStart.add(this.continuallyRotate, this);
-                    tween.onComplete.add(this.playerOneDies, this);
+                    if (!this.splash_sound.isPlaying)
+                        this.splash_sound.play();
+                    this.playerOneDies();
                 }
             }
         };
 
         Arena.prototype.arenaTileCollisionHandler = function () {
             if (!this.player.isJumping) {
-                console.log("arena collision");
                 this.game.time.events.stop();
                 this.player.resetFuel();
             }
         };
 
         Arena.prototype.playerOneDies = function () {
+            var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
+            tween.onStart.add(this.continuallyRotate, this);
+            tween.onComplete.add(this.shutDownGame, this);
+        };
+
+        Arena.prototype.shutDownGame = function () {
             this.player.kill();
             this.websocket.close();
             this.game.state.start("GameOver", true, false);

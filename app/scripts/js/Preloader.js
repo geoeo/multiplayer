@@ -22,6 +22,10 @@ define(["require", "exports"], function(require, exports) {
             this.game.load.tilemap('map', 'assets/moba_nicki.json', null, Phaser.Tilemap.TILED_JSON);
 
             this.game.load.image('tiles', 'assets/tileset.png');
+
+            this.load.audio("jump_sound", "assets/sounds/smw_jump.wav", true);
+            this.load.audio("splash_sound", "assets/sounds/splash.wav", true);
+            this.load.audio("game_over_sound", "assets/sounds/smb_mariodie.wav", true);
         };
 
         Preloader.prototype.create = function () {

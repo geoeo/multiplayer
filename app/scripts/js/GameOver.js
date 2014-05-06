@@ -7,10 +7,16 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports"], function(require, exports) {
     var GameOver = (function (_super) {
         __extends(GameOver, _super);
-        function GameOver() {
-            _super.apply(this, arguments);
+        function GameOver(game_over_sound) {
+            _super.call(this);
+            this.game_over_sound = game_over_sound;
         }
+        GameOver.prototype.preload = function () {
+            this.game_over_sound = this.add.audio("game_over_sound", 1.0, false);
+        };
+
         GameOver.prototype.create = function () {
+            this.game_over_sound.play();
             alert("GameOver");
         };
         return GameOver;
