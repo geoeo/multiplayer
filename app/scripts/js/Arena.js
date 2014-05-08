@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, last_jump, jump_duration) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -21,14 +21,16 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.jump_sound = jump_sound;
             this.splash_sound = splash_sound;
             this.jump_tween = jump_tween;
+            this.last_jump = last_jump;
+            this.jump_duration = jump_duration;
         }
         Arena.prototype.preload = function () {
             this.websocket = new WebSocket("ws://localhost:9000/testSocket");
 
             this.websocket.onopen = function (evt) {
-                console.log(evt.data);
+                console.log("connection was opened");
             };
-
+            this.websocket.onmessage = this.onMessage.bind(this);
             this.websocket.onclose = function () {
                 console.log("connections was closed");
             };
@@ -68,11 +70,16 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, 150, false, false);
             this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, 150, false, false);
 
+            this.player.bringToTop();
+
             this.cursors = this.game.input.keyboard.createCursorKeys();
 
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
+
+            this.last_jump = 0;
+            this.jump_duration = 600;
 
             this.jump_tween = this.game.add.tween(this.player.scale);
 
@@ -84,7 +91,9 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             if (this.websocket.readyState === 1)
                 this.websocket.send("multiplayer - update");
 
-            this.game.physics.arcade.collide(this.player, this.player2);
+            if (this.player.isJumping === this.player2.isJumping)
+                this.game.physics.arcade.collide(this.player, this.player2);
+
             this.game.physics.arcade.overlap(this.player, this.groundLayer);
             this.game.physics.arcade.overlap(this.player, this.arenaLayer);
 
@@ -94,14 +103,20 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         Arena.prototype.handleUserInput = function () {
             if (this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)) {
                 console.log("jump");
-                this.player.setJumpingTo(true);
 
-                if (!this.jump_sound.isPlaying) {
-                    this.jump_sound.play();
-                    this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, 300, Phaser.Easing.Linear.None, true, 0, 1, true).start();
+                if (this.timeToJump()) {
+                    this.player.setJumpingTo(true);
+
+                    this.last_jump = this.game.time.now;
+
+                    this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, this.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start().onComplete.add(function () {
+                        this.setJumpingTo(false);
+                    }, this.player);
+
+                    if (!this.jump_sound.isPlaying) {
+                        this.jump_sound.play();
+                    }
                 }
-            } else if (this.game.input.keyboard.justReleased(Phaser.Keyboard.SPACEBAR)) {
-                this.player.setJumpingTo(false);
             }
 
             if (this.cursors.left.isDown) {
@@ -128,13 +143,18 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             }
         };
 
+        Arena.prototype.render = function () {
+        };
+
         Arena.prototype.groundTileCollisionHandler = function () {
             if (!this.player.isJumping) {
-                this.game.time.events.add(1000, function (player) {
-                    player.decreaseFuel();
-                }, this, this.player);
+                if (!this.game.time.events.running) {
+                    this.game.time.events.repeat(1000, 3, function (player) {
+                        player.decreaseFuel();
+                    }, this, this.player);
 
-                this.game.time.events.start();
+                    this.game.time.events.start();
+                }
 
                 if (this.player.isDead()) {
                     if (!this.splash_sound.isPlaying)
@@ -165,6 +185,22 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.continuallyRotate = function () {
             this.player.angle += 4;
+        };
+
+        Arena.prototype.timeToJump = function () {
+            var now = this.game.time.now;
+
+            return this.last_jump + this.jump_duration < now;
+        };
+
+        Arena.prototype.onMessage = function (message) {
+            var obj = $.parseJSON(message.data);
+            var x = obj.x;
+            var y = obj.y;
+            var angle = obj.angle;
+
+            this.player2.body.velocity = new Phaser.Point(x, y);
+            this.player2.angle = angle;
         };
         return Arena;
     })(Phaser.State);

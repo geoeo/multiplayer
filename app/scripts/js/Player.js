@@ -27,20 +27,24 @@ define(["require", "exports"], function(require, exports) {
 
             game.add.existing(this);
         }
-        Player.prototype.setJumpingTo = function (value) {
-            this.isJumping = value;
+        Player.prototype.setJumpingTo = function (jumping) {
+            this.isJumping = jumping;
         };
 
         Player.prototype.decreaseFuel = function () {
+            console.log("Player - decrease fuel");
+
             var decrease_fuel_by = this.max_fuel_width / 3;
             var new_width = $("#player_fuel_image").width() - decrease_fuel_by;
 
             $('#player_fuel_image').css("width", new_width);
 
-            if (this.fuel > 0)
+            if (this.fuel > 0) {
                 this.fuel--;
-            else if (this.fuel === 0)
-                this.shouldDie = true;
+
+                if (this.fuel === 0)
+                    this.shouldDie = true;
+            }
         };
 
         Player.prototype.resetFuel = function () {
