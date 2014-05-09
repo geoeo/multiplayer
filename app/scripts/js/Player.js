@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports"], function(require, exports) {
     var Player = (function (_super) {
         __extends(Player, _super);
-        function Player(game, x, y, name, fuel, max_fuel_width, isJumping, shouldDie) {
+        function Player(game, x, y, name, fuel, max_fuel_width, last_jump, jump_duration, isJumping, shouldDie) {
             _super.call(this, game, x, y, name, 0);
             this.game = game;
             this.x = x;
@@ -15,6 +15,8 @@ define(["require", "exports"], function(require, exports) {
             this.name = name;
             this.fuel = fuel;
             this.max_fuel_width = max_fuel_width;
+            this.last_jump = last_jump;
+            this.jump_duration = jump_duration;
             this.isJumping = isJumping;
             this.shouldDie = shouldDie;
 
@@ -29,6 +31,12 @@ define(["require", "exports"], function(require, exports) {
         }
         Player.prototype.setJumpingTo = function (jumping) {
             this.isJumping = jumping;
+        };
+
+        Player.prototype.timeToJump = function () {
+            var now = this.game.time.now;
+
+            return this.last_jump + this.jump_duration < now;
         };
 
         Player.prototype.decreaseFuel = function () {

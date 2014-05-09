@@ -2,7 +2,7 @@
 ///<reference path='../libs/lib.d.ts'/>
 ///<reference path='../libs/phaser.d.ts'/>
 
-export class GameOver extends Phaser.State {
+export class GameOverW extends Phaser.State {
 
     constructor(public game_over_sound : Phaser.Sound){
         super();
@@ -14,6 +14,6 @@ export class GameOver extends Phaser.State {
 
     create(){
         this.game_over_sound.play();
-        alert("GameOver");
+        alert("GameOver - You Win");
     }
 }

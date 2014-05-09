@@ -5,21 +5,21 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 define(["require", "exports"], function(require, exports) {
-    var GameOverL = (function (_super) {
-        __extends(GameOverL, _super);
-        function GameOverL(game_over_sound) {
+    var GameOverW = (function (_super) {
+        __extends(GameOverW, _super);
+        function GameOverW(game_over_sound) {
             _super.call(this);
             this.game_over_sound = game_over_sound;
         }
-        GameOverL.prototype.preload = function () {
+        GameOverW.prototype.preload = function () {
             this.game_over_sound = this.add.audio("game_over_sound", 1.0, false);
         };
 
-        GameOverL.prototype.create = function () {
+        GameOverW.prototype.create = function () {
             this.game_over_sound.play();
-            alert("GameOver - You Lost");
+            alert("GameOver - You Win");
         };
-        return GameOverL;
+        return GameOverW;
     })(Phaser.State);
-    exports.GameOverL = GameOverL;
+    exports.GameOverW = GameOverW;
 });

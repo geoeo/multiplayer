@@ -11,6 +11,8 @@ export class Player extends Phaser.Sprite {
                 public name : string,
                 public fuel : number,
                 public max_fuel_width : number, /* css3 width of fuel image */
+                public last_jump : number,
+                public jump_duration : number,
                 public isJumping : boolean,
                 public shouldDie : boolean){
         // last arg is animation frame start - no animations at the moment
@@ -33,6 +35,12 @@ export class Player extends Phaser.Sprite {
         this.isJumping = jumping;
     }
 
+    timeToJump(){
+        var now : number = this.game.time.now;
+
+        return this.last_jump + this.jump_duration < now;
+    }
+
     decreaseFuel(){
         console.log("Player - decrease fuel");
 
@@ -47,14 +55,11 @@ export class Player extends Phaser.Sprite {
 
             if(this.fuel === 0)
                 this.shouldDie = true;
-
         }
 
     }
 
-
     resetFuel(){
-//        console.log("Player - reset fuel");
         $("#player_fuel_image").css("width" , this.max_fuel_width);
         this.fuel = 3;
     }

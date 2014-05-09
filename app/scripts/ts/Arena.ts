@@ -19,8 +19,7 @@ export class Arena extends Phaser.State {
                 public jump_sound : Phaser.Sound,
                 public splash_sound : Phaser.Sound,
                 public jump_tween : Phaser.Tween,
-                public last_jump : number,
-                public jump_duration : number){
+                public enemyObject : any){
         super();
     }
 
@@ -78,47 +77,69 @@ export class Arena extends Phaser.State {
 
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,150,false,false);
-        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,150,false,false);
+        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,150,0,600,false,false);
+        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,150,0,600,false,false);
 
         // Set player's sprite to be rendered on top of player2's sprite
         this.player.bringToTop();
 
-        this.cursors = this.game.input.keyboard.createCursorKeys();
+        this.enemyObject =
+            {
+                "x" : 0,
+                "y" : 0,
+                "angle" : 0,
+                "isJumping" : false
+
+            };
 
         this.currentSpeed = 0;
 
         // rotate so that key controls match up
         this.player.angle -= 90;
-//        this.playerOneShouldDie = false;
 
-        this.last_jump = 0;
-        this.jump_duration = 600;
+        // CONTROLL STUFF //
+
+        this.cursors = this.game.input.keyboard.createCursorKeys();
 
         // ANIMATION STUFF ///
 
         this.jump_tween = this.game.add.tween(this.player.scale);
 
-        if(this.websocket.readyState === 1 )
-            this.websocket.send("multiplayer - ready to receive player positions");
-
-
     }
 
     update(){
 
-        if(this.websocket.readyState === 1 )
-            this.websocket.send("multiplayer - update");
-
         //  Collide the player with the platforms
+        this.handleCollisions();
+        this.handleOverlaps();
 
-        if(this.player.isJumping === this.player2.isJumping)
+        this.handleUserInput();
+        this.updateEnemy();
+        this.sendPlayerData();
+    }
+
+    render() {
+
+
+//        this.game.debug.bodyInfo(this.player, 16, 24);
+//
+//
+//        this.game.debug.body(this.player);
+//        this.game.debug.body(this.player2);
+    }
+
+    ///////////// UTILITY METHODS /////////////////////
+
+    private handleCollisions() {
+        if (this.player.isJumping === this.player2.isJumping)
             this.game.physics.arcade.collide(this.player, this.player2);
+    }
+
+    private handleOverlaps() {
 
         this.game.physics.arcade.overlap(this.player, this.groundLayer);
         this.game.physics.arcade.overlap(this.player, this.arenaLayer);
 
-        this.handleUserInput();
     }
 
     private handleUserInput(){
@@ -126,15 +147,15 @@ export class Arena extends Phaser.State {
         if(this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)){
             console.log("jump");
 
-            if(this.timeToJump()){
+            if(this.player.timeToJump()){
 
                 this.player.setJumpingTo(true);
 
-                this.last_jump = this.game.time.now;
+                this.player.last_jump = this.game.time.now;
 
-                //TODO tween size on cont jump still buggy
+                //TODO tween size on cont. jump still buggy
                 this.game.add.tween(this.player.scale)
-                    .to({x : 2.0, y : 2.0},this.jump_duration/2,Phaser.Easing.Linear.None,true,0,1,true)
+                    .to({x : 2.0, y : 2.0},this.player.jump_duration/2,Phaser.Easing.Linear.None,true,0,1,true)
                     .start().onComplete.add(function(){
                         this.setJumpingTo(false);
                     },this.player);
@@ -142,7 +163,6 @@ export class Arena extends Phaser.State {
                 if(!this.jump_sound.isPlaying){
                     this.jump_sound.play();
                 }
-
             }
 
         }
@@ -185,14 +205,36 @@ export class Arena extends Phaser.State {
         }
     }
 
-    render() {
+    private sendPlayerData(){
+        if(this.websocket.readyState === 1)
+            this.websocket.send(JSON.stringify({ "x" : this.player.body.x ,
+                                                 "y" : this.player.body.y ,
+                                                 "angle": this.player.angle,
+                                                 "isJumping" : this.player.isJumping}));
+    }
 
 
-//        this.game.debug.bodyInfo(this.player, 16, 24);
-//
-//
-//        this.game.debug.body(this.player);
-//        this.game.debug.body(this.player2);
+    // read out the most recent data stored in the enemy json object
+    private updateEnemy(){
+
+        var x : any = this.enemyObject.x;
+        var y : any = this.enemyObject.y;
+        var angle : any = this.enemyObject.angle;
+        var isJumping : any = this.enemyObject.isJumping;
+
+        this.player2.body.velocity = new Phaser.Point(x,y);
+        this.player2.angle = angle;
+
+        if(isJumping && this.player2.timeToJump()){
+            this.player2.setJumpingTo(true);
+            this.player2.last_jump = this.game.time.now;
+            this.game.add.tween(this.player2.scale)
+                .to({x : 2.0, y : 2.0},this.player2.jump_duration/2,Phaser.Easing.Linear.None,true,0,1,true)
+                .start();
+        }
+
+        this.player2.setJumpingTo(false);
+
     }
 
     private groundTileCollisionHandler(){
@@ -201,10 +243,11 @@ export class Arena extends Phaser.State {
 
             if(!this.game.time.events.running){
 
-                this.game.time.events.repeat(1000,3,function(player){
-                    player.decreaseFuel();
-
-                },this,this.player);
+                this.game.time.events.repeat(1000,3,
+                    function(player){
+                        player.decreaseFuel();
+                    },
+                this,this.player);
 
                 this.game.time.events.start();
             }
@@ -229,42 +272,49 @@ export class Arena extends Phaser.State {
         }
     }
 
+    // TODO Refactor player death
+
     private playerOneDies(){
 
         var tween = this.game.add.tween(this.player.scale)
             .to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
-        tween.onStart.add(this.continuallyRotate,this);
-        tween.onComplete.add(this.shutDownGame,this);
+        tween.onStart.add(this.continuallyRotatePlayerOne,this);
+        tween.onComplete.add(this.shutDownGameWithLoss,this);
     }
 
-    private shutDownGame() {
+    private playerTwoDies(){
+        var tween = this.game.add.tween(this.player2.scale)
+            .to({x : 0, y : 0},800,Phaser.Easing.Linear.None,true,0,0,false);
+        tween.onStart.add(this.continuallyRotatePlayerTwo,this);
+        tween.onComplete.add(this.shutDownGameWithWin,this);
+    }
 
+    private cleanUp(){
         this.player.kill();
+        this.player2.kill();
         this.websocket.close();
-        this.game.state.start("GameOver",true,false);
-
     }
 
-    private continuallyRotate(){
+    private shutDownGameWithLoss() {
+        this.cleanUp();
+        this.game.state.start("GameOverL",true,false);
+    }
+
+    private shutDownGameWithWin() {
+        this.cleanUp();
+        this.game.state.start("GameOverW",true,false);
+    }
+
+    private continuallyRotatePlayerOne(){
         this.player.angle += 4;
     }
 
-    private timeToJump(){
-        var now : number = this.game.time.now;
-
-        return this.last_jump + this.jump_duration < now;
+    private continuallyRotatePlayerTwo(){
+        this.player2.angle += 4;
     }
 
     private onMessage(message){
-
-        var obj = $.parseJSON(message.data);
-        var x : any = obj.x;
-        var y : any = obj.y;
-        var angle : any = obj.angle;
-
-        this.player2.body.velocity = new Phaser.Point(x,y);
-        this.player2.angle = angle;
-
+        this.enemyObject = $.parseJSON(message.data);
     }
 
 }

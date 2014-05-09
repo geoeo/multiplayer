@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, last_jump, jump_duration) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, enemyObject) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -21,8 +21,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.jump_sound = jump_sound;
             this.splash_sound = splash_sound;
             this.jump_tween = jump_tween;
-            this.last_jump = last_jump;
-            this.jump_duration = jump_duration;
+            this.enemyObject = enemyObject;
         }
         Arena.prototype.preload = function () {
             this.websocket = new WebSocket("ws://localhost:9000/testSocket");
@@ -67,49 +66,59 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, 150, false, false);
-            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, 150, false, false);
+            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, 150, 0, 600, false, false);
+            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, 150, 0, 600, false, false);
 
             this.player.bringToTop();
 
-            this.cursors = this.game.input.keyboard.createCursorKeys();
+            this.enemyObject = {
+                "x": 0,
+                "y": 0,
+                "angle": 0,
+                "isJumping": false
+            };
 
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
 
-            this.last_jump = 0;
-            this.jump_duration = 600;
+            this.cursors = this.game.input.keyboard.createCursorKeys();
 
             this.jump_tween = this.game.add.tween(this.player.scale);
-
-            if (this.websocket.readyState === 1)
-                this.websocket.send("multiplayer - ready to receive player positions");
         };
 
         Arena.prototype.update = function () {
-            if (this.websocket.readyState === 1)
-                this.websocket.send("multiplayer - update");
-
-            if (this.player.isJumping === this.player2.isJumping)
-                this.game.physics.arcade.collide(this.player, this.player2);
-
-            this.game.physics.arcade.overlap(this.player, this.groundLayer);
-            this.game.physics.arcade.overlap(this.player, this.arenaLayer);
+            this.handleCollisions();
+            this.handleOverlaps();
 
             this.handleUserInput();
+            this.updateEnemy();
+            this.sendPlayerData();
+        };
+
+        Arena.prototype.render = function () {
+        };
+
+        Arena.prototype.handleCollisions = function () {
+            if (this.player.isJumping === this.player2.isJumping)
+                this.game.physics.arcade.collide(this.player, this.player2);
+        };
+
+        Arena.prototype.handleOverlaps = function () {
+            this.game.physics.arcade.overlap(this.player, this.groundLayer);
+            this.game.physics.arcade.overlap(this.player, this.arenaLayer);
         };
 
         Arena.prototype.handleUserInput = function () {
             if (this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)) {
                 console.log("jump");
 
-                if (this.timeToJump()) {
+                if (this.player.timeToJump()) {
                     this.player.setJumpingTo(true);
 
-                    this.last_jump = this.game.time.now;
+                    this.player.last_jump = this.game.time.now;
 
-                    this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, this.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start().onComplete.add(function () {
+                    this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, this.player.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start().onComplete.add(function () {
                         this.setJumpingTo(false);
                     }, this.player);
 
@@ -143,7 +152,31 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             }
         };
 
-        Arena.prototype.render = function () {
+        Arena.prototype.sendPlayerData = function () {
+            if (this.websocket.readyState === 1)
+                this.websocket.send(JSON.stringify({
+                    "x": this.player.body.x,
+                    "y": this.player.body.y,
+                    "angle": this.player.angle,
+                    "isJumping": this.player.isJumping }));
+        };
+
+        Arena.prototype.updateEnemy = function () {
+            var x = this.enemyObject.x;
+            var y = this.enemyObject.y;
+            var angle = this.enemyObject.angle;
+            var isJumping = this.enemyObject.isJumping;
+
+            this.player2.body.velocity = new Phaser.Point(x, y);
+            this.player2.angle = angle;
+
+            if (isJumping && this.player2.timeToJump()) {
+                this.player2.setJumpingTo(true);
+                this.player2.last_jump = this.game.time.now;
+                this.game.add.tween(this.player2.scale).to({ x: 2.0, y: 2.0 }, this.player2.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start();
+            }
+
+            this.player2.setJumpingTo(false);
         };
 
         Arena.prototype.groundTileCollisionHandler = function () {
@@ -173,34 +206,42 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.playerOneDies = function () {
             var tween = this.game.add.tween(this.player.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
-            tween.onStart.add(this.continuallyRotate, this);
-            tween.onComplete.add(this.shutDownGame, this);
+            tween.onStart.add(this.continuallyRotatePlayerOne, this);
+            tween.onComplete.add(this.shutDownGameWithLoss, this);
         };
 
-        Arena.prototype.shutDownGame = function () {
+        Arena.prototype.playerTwoDies = function () {
+            var tween = this.game.add.tween(this.player2.scale).to({ x: 0, y: 0 }, 800, Phaser.Easing.Linear.None, true, 0, 0, false);
+            tween.onStart.add(this.continuallyRotatePlayerTwo, this);
+            tween.onComplete.add(this.shutDownGameWithWin, this);
+        };
+
+        Arena.prototype.cleanUp = function () {
             this.player.kill();
+            this.player2.kill();
             this.websocket.close();
-            this.game.state.start("GameOver", true, false);
         };
 
-        Arena.prototype.continuallyRotate = function () {
+        Arena.prototype.shutDownGameWithLoss = function () {
+            this.cleanUp();
+            this.game.state.start("GameOverL", true, false);
+        };
+
+        Arena.prototype.shutDownGameWithWin = function () {
+            this.cleanUp();
+            this.game.state.start("GameOverW", true, false);
+        };
+
+        Arena.prototype.continuallyRotatePlayerOne = function () {
             this.player.angle += 4;
         };
 
-        Arena.prototype.timeToJump = function () {
-            var now = this.game.time.now;
-
-            return this.last_jump + this.jump_duration < now;
+        Arena.prototype.continuallyRotatePlayerTwo = function () {
+            this.player2.angle += 4;
         };
 
         Arena.prototype.onMessage = function (message) {
-            var obj = $.parseJSON(message.data);
-            var x = obj.x;
-            var y = obj.y;
-            var angle = obj.angle;
-
-            this.player2.body.velocity = new Phaser.Point(x, y);
-            this.player2.angle = angle;
+            this.enemyObject = $.parseJSON(message.data);
         };
         return Arena;
     })(Phaser.State);
