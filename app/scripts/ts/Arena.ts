@@ -26,6 +26,7 @@ export class Arena extends Phaser.State {
     preload() {
 
         // TODO investigate physics failure when websocket server is offline
+        // TODO upgrade play framework to add wss support
         this.websocket = new WebSocket("ws://localhost:9000/testSocket");
 
         this.websocket.onopen = function(evt) {
@@ -88,7 +89,8 @@ export class Arena extends Phaser.State {
                 "x" : 0,
                 "y" : 0,
                 "angle" : 0,
-                "isJumping" : false
+                "isJumping" : false,
+                "shouldDie" : false
 
             };
 
@@ -109,12 +111,13 @@ export class Arena extends Phaser.State {
 
     update(){
 
+        this.updateEnemy();
+
         //  Collide the player with the platforms
         this.handleCollisions();
         this.handleOverlaps();
 
         this.handleUserInput();
-        this.updateEnemy();
         this.sendPlayerData();
     }
 
@@ -142,6 +145,8 @@ export class Arena extends Phaser.State {
 
     }
 
+    // TODO possible error in player state transfer since state is only transfered at the end of the
+    // TODO update loop. Thus, jumping state may be outdated.
     private handleUserInput(){
 
         if(this.game.input.keyboard.justPressed(Phaser.Keyboard.SPACEBAR)){
@@ -150,7 +155,6 @@ export class Arena extends Phaser.State {
             if(this.player.timeToJump()){
 
                 this.player.setJumpingTo(true);
-
                 this.player.last_jump = this.game.time.now;
 
                 //TODO tween size on cont. jump still buggy
@@ -207,10 +211,11 @@ export class Arena extends Phaser.State {
 
     private sendPlayerData(){
         if(this.websocket.readyState === 1)
-            this.websocket.send(JSON.stringify({ "x" : this.player.body.x ,
-                                                 "y" : this.player.body.y ,
-                                                 "angle": this.player.angle,
-                                                 "isJumping" : this.player.isJumping}));
+            this.websocket.send(JSON.stringify({ "x"         : this.player.body.x ,
+                                                 "y"         : this.player.body.y ,
+                                                 "angle"     : this.player.angle,
+                                                 "isJumping" : this.player.isJumping,
+                                                 "shouldDie" : this.player.isDead()}));
     }
 
 
@@ -221,19 +226,25 @@ export class Arena extends Phaser.State {
         var y : any = this.enemyObject.y;
         var angle : any = this.enemyObject.angle;
         var isJumping : any = this.enemyObject.isJumping;
+        var shouldDie : any = this.enemyObject.shouldDie;
 
         this.player2.body.velocity = new Phaser.Point(x,y);
         this.player2.angle = angle;
+        this.player2.shouldDie = shouldDie;
 
         if(isJumping && this.player2.timeToJump()){
             this.player2.setJumpingTo(true);
             this.player2.last_jump = this.game.time.now;
             this.game.add.tween(this.player2.scale)
                 .to({x : 2.0, y : 2.0},this.player2.jump_duration/2,Phaser.Easing.Linear.None,true,0,1,true)
-                .start();
+                .start().onComplete.add(function(){
+                    this.setJumpingTo(false);
+                },this.player2);
         }
 
-        this.player2.setJumpingTo(false);
+        if(this.player2.isDead()){
+            this.playerTwoDies();
+        }
 
     }
 

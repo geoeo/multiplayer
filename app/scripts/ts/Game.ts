@@ -27,9 +27,11 @@ export class Game extends Phaser.Game{
     }
 }
 
+//TODO trigger game on server signal
 $('document').ready(function(){
     console.log("start game");
     new Game();
 });
+
 
 

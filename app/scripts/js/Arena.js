@@ -75,7 +75,8 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
                 "x": 0,
                 "y": 0,
                 "angle": 0,
-                "isJumping": false
+                "isJumping": false,
+                "shouldDie": false
             };
 
             this.currentSpeed = 0;
@@ -88,11 +89,12 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.update = function () {
+            this.updateEnemy();
+
             this.handleCollisions();
             this.handleOverlaps();
 
             this.handleUserInput();
-            this.updateEnemy();
             this.sendPlayerData();
         };
 
@@ -115,7 +117,6 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
                 if (this.player.timeToJump()) {
                     this.player.setJumpingTo(true);
-
                     this.player.last_jump = this.game.time.now;
 
                     this.game.add.tween(this.player.scale).to({ x: 2.0, y: 2.0 }, this.player.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start().onComplete.add(function () {
@@ -158,7 +159,8 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
                     "x": this.player.body.x,
                     "y": this.player.body.y,
                     "angle": this.player.angle,
-                    "isJumping": this.player.isJumping }));
+                    "isJumping": this.player.isJumping,
+                    "shouldDie": this.player.isDead() }));
         };
 
         Arena.prototype.updateEnemy = function () {
@@ -166,17 +168,23 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             var y = this.enemyObject.y;
             var angle = this.enemyObject.angle;
             var isJumping = this.enemyObject.isJumping;
+            var shouldDie = this.enemyObject.shouldDie;
 
             this.player2.body.velocity = new Phaser.Point(x, y);
             this.player2.angle = angle;
+            this.player2.shouldDie = shouldDie;
 
             if (isJumping && this.player2.timeToJump()) {
                 this.player2.setJumpingTo(true);
                 this.player2.last_jump = this.game.time.now;
-                this.game.add.tween(this.player2.scale).to({ x: 2.0, y: 2.0 }, this.player2.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start();
+                this.game.add.tween(this.player2.scale).to({ x: 2.0, y: 2.0 }, this.player2.jump_duration / 2, Phaser.Easing.Linear.None, true, 0, 1, true).start().onComplete.add(function () {
+                    this.setJumpingTo(false);
+                }, this.player2);
             }
 
-            this.player2.setJumpingTo(false);
+            if (this.player2.isDead()) {
+                this.playerTwoDies();
+            }
         };
 
         Arena.prototype.groundTileCollisionHandler = function () {

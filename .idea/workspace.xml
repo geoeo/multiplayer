@@ -2,15 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7af66dd3-222c-44a5-8b99-ea1e58b6c5c0" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/scripts/ts/GameOverW.ts" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/app/scripts/ts/GameOver.ts" afterPath="$PROJECT_DIR$/app/scripts/ts/GameOverL.ts" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/js/Arena.js" afterPath="$PROJECT_DIR$/app/scripts/js/Arena.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/ts/Arena.ts" afterPath="$PROJECT_DIR$/app/scripts/ts/Arena.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/js/Game.js" afterPath="$PROJECT_DIR$/app/scripts/js/Game.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/ts/Game.ts" afterPath="$PROJECT_DIR$/app/scripts/ts/Game.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/js/GameOver.js" afterPath="$PROJECT_DIR$/app/scripts/js/GameOver.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/js/Player.js" afterPath="$PROJECT_DIR$/app/scripts/js/Player.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/scripts/ts/Player.ts" afterPath="$PROJECT_DIR$/app/scripts/ts/Player.ts" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/index.html" afterPath="$PROJECT_DIR$/app/index.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="multiplayer.iws" />
@@ -37,7 +32,18 @@
       <file leaf-file-name="Game.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="18" selection-start="375" selection-end="375" vertical-scroll-proportion="0.0" vertical-offset="40" max-vertical-offset="585">
+            <state line="3" column="0" selection-start="126" selection-end="126" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="645">
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="index.html" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/index.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="36" column="0" selection-start="1470" selection-end="1470" vertical-scroll-proportion="-8.666667" vertical-offset="332" max-vertical-offset="990">
               <folding />
             </state>
           </provider>
@@ -46,7 +52,7 @@
       <file leaf-file-name="Boot.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/Boot.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="25" column="64" selection-start="700" selection-end="700" vertical-scroll-proportion="0.0" vertical-offset="85" max-vertical-offset="840">
+            <state line="25" column="64" selection-start="700" selection-end="700" vertical-scroll-proportion="0.0" vertical-offset="375" max-vertical-offset="870">
               <folding />
             </state>
           </provider>
@@ -55,7 +61,7 @@
       <file leaf-file-name="Preloader.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/Preloader.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="26" column="40" selection-start="1129" selection-end="1144" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="780">
+            <state line="26" column="40" selection-start="1129" selection-end="1144" vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="810">
               <folding />
             </state>
           </provider>
@@ -64,7 +70,7 @@
       <file leaf-file-name="Arena.ts" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/Arena.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="163" column="29" selection-start="5380" selection-end="5380" vertical-scroll-proportion="0.78527606" vertical-offset="2031" max-vertical-offset="4905">
+            <state line="143" column="71" selection-start="4725" selection-end="4725" vertical-scroll-proportion="-4.0970874" vertical-offset="4225" max-vertical-offset="5070">
               <folding />
             </state>
           </provider>
@@ -73,7 +79,7 @@
       <file leaf-file-name="GameOverL.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/GameOverL.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="4" column="45" selection-start="172" selection-end="172" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="345">
+            <state line="4" column="45" selection-start="172" selection-end="172" vertical-scroll-proportion="0.0" vertical-offset="60" max-vertical-offset="375">
               <folding />
             </state>
           </provider>
@@ -82,10 +88,8 @@
       <file leaf-file-name="GameOverW.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/GameOverW.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="16" column="33" selection-start="436" selection-end="436" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="375">
-              <folding>
-                <element signature="n#!!doc" expanded="true" />
-              </folding>
+            <state line="16" column="33" selection-start="436" selection-end="436" vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="375">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -93,7 +97,7 @@
       <file leaf-file-name="Player.ts" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/scripts/ts/Player.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="37" column="4" selection-start="1076" selection-end="1076" vertical-scroll-proportion="0.0" vertical-offset="180" max-vertical-offset="1155">
+            <state line="37" column="4" selection-start="1076" selection-end="1076" vertical-scroll-proportion="0.0" vertical-offset="615" max-vertical-offset="1155">
               <folding />
             </state>
           </provider>
@@ -131,14 +135,14 @@
         <option value="$PROJECT_DIR$/app/scripts/libs/phaser.min.js" />
         <option value="$PROJECT_DIR$/app/assets/moba.json" />
         <option value="$PROJECT_DIR$/Gruntfile.js" />
-        <option value="$PROJECT_DIR$/app/index.html" />
         <option value="$PROJECT_DIR$/app/styles/less/main.less" />
         <option value="$PROJECT_DIR$/app/scripts/ts/Preloader.ts" />
         <option value="$PROJECT_DIR$/app/scripts/ts/Player.ts" />
-        <option value="$PROJECT_DIR$/app/scripts/ts/Arena.ts" />
         <option value="$PROJECT_DIR$/app/scripts/ts/GameOver.ts" />
-        <option value="$PROJECT_DIR$/app/scripts/ts/Game.ts" />
         <option value="$PROJECT_DIR$/app/scripts/ts/GameOverW.ts" />
+        <option value="$PROJECT_DIR$/app/scripts/ts/Game.ts" />
+        <option value="$PROJECT_DIR$/app/index.html" />
+        <option value="$PROJECT_DIR$/app/scripts/ts/Arena.ts" />
       </list>
     </option>
   </component>
@@ -174,6 +178,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -350,7 +355,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -499,7 +503,9 @@
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state line="19" column="0" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="570">
-          <folding />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -561,7 +567,9 @@
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state line="19" column="0" selection-start="509" selection-end="509" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="570">
-          <folding />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -623,7 +631,9 @@
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state line="14" column="20" selection-start="315" selection-end="315" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="585">
-          <folding />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -717,26 +727,9 @@
         <state line="8" column="23" selection-start="168" selection-end="168" vertical-scroll-proportion="0.15852048" vertical-offset="0" max-vertical-offset="757" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="38" selection-start="1290" selection-end="1290" vertical-scroll-proportion="0.0" vertical-offset="137" max-vertical-offset="1245" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/styles/less/main.less">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="11" selection-start="193" selection-end="193" vertical-scroll-proportion="0.0" vertical-offset="180" max-vertical-offset="285">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/scripts/js/GameOver.js">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="375" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/scripts/js/Game.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="515" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/scripts/js/Boot.js">
@@ -747,13 +740,6 @@
     <entry file="file://$PROJECT_DIR$/app/scripts/js/Player.js">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="915" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/scripts/ts/Player.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="4" selection-start="1076" selection-end="1076" vertical-scroll-proportion="0.0" vertical-offset="225" max-vertical-offset="1155">
-          <folding />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/Boot.ts">
@@ -770,13 +756,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="18" selection-start="375" selection-end="375" vertical-scroll-proportion="0.0" vertical-offset="40" max-vertical-offset="585">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/GameOverL.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state line="4" column="45" selection-start="172" selection-end="172" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="345">
@@ -787,15 +766,48 @@
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/GameOverW.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state line="16" column="33" selection-start="436" selection-end="436" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="375">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/scripts/js/Game.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="525" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/styles/less/main.less">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="11" selection-start="193" selection-end="193" vertical-scroll-proportion="0.0" vertical-offset="180" max-vertical-offset="285">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/scripts/ts/Game.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="0" selection-start="126" selection-end="126" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="645">
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/app/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="36" column="0" selection-start="1470" selection-end="1470" vertical-scroll-proportion="-8.666667" vertical-offset="332" max-vertical-offset="990">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/scripts/ts/Player.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="37" column="4" selection-start="1076" selection-end="1076" vertical-scroll-proportion="0.0" vertical-offset="225" max-vertical-offset="1155">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/scripts/ts/Arena.ts">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="163" column="29" selection-start="5380" selection-end="5380" vertical-scroll-proportion="0.78527606" vertical-offset="2031" max-vertical-offset="4905">
+        <state line="143" column="71" selection-start="4725" selection-end="4725" vertical-scroll-proportion="-4.0970874" vertical-offset="4225" max-vertical-offset="5070">
           <folding />
         </state>
       </provider>
