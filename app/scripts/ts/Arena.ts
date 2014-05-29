@@ -27,7 +27,7 @@ export class Arena extends Phaser.State {
 
         // TODO investigate physics failure when websocket server is offline
         // TODO upgrade play framework to add wss support
-        this.websocket = new WebSocket("ws://localhost:9000/testSocket");
+        this.websocket = new WebSocket("ws://localhost:9000/dataSocket");
 
         this.websocket.onopen = function(evt) {
             console.log("connection was opened");
@@ -324,8 +324,16 @@ export class Arena extends Phaser.State {
         this.player2.angle += 4;
     }
 
+    //TODO implement switching to dataSocket
     private onMessage(message){
-        this.enemyObject = $.parseJSON(message.data);
+        var data = $.parseJSON(message.data);
+        if(data.header === "player"){
+            this.enemyObject = data.body;
+        } else if(data.header === "status"){
+            if (data.body)
+                console.log("switch socket");
+        }
+
     }
 
 }

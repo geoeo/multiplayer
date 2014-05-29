@@ -24,7 +24,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.enemyObject = enemyObject;
         }
         Arena.prototype.preload = function () {
-            this.websocket = new WebSocket("ws://localhost:9000/testSocket");
+            this.websocket = new WebSocket("ws://localhost:9000/dataSocket");
 
             this.websocket.onopen = function (evt) {
                 console.log("connection was opened");
@@ -249,7 +249,13 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.onMessage = function (message) {
-            this.enemyObject = $.parseJSON(message.data);
+            var data = $.parseJSON(message.data);
+            if (data.header === "player") {
+                this.enemyObject = data.body;
+            } else if (data.header === "status") {
+                if (data.body)
+                    console.log("switch socket");
+            }
         };
         return Arena;
     })(Phaser.State);
