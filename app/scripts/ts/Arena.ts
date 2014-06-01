@@ -23,19 +23,57 @@ export class Arena extends Phaser.State {
         super();
     }
 
+    private createWebSocket(url,isLobby){
+
+        this.websocket = new WebSocket(url);
+
+        this.websocket.onopen = function() {
+            console.log("connection was opened");
+        };
+        if(isLobby){
+            console.log("lobby");
+            this.websocket.onmessage = this.onLobbyMessage.bind(this);
+        } else {
+            console.log("arena");
+            this.websocket.onmessage = this.onDataMessage.bind(this);
+        }
+
+        this.websocket.onclose = function() {
+            console.log("connections was closed");
+        };
+
+    }
+
+    private onDataMessage(message){
+
+        var data = $.parseJSON(message.data);
+        if(data.header === "error"){
+            console.log("error");
+        } else {
+            this.enemyObject = data.body;
+        }
+
+
+    }
+
+    private onLobbyMessage(message){
+
+        var data = $.parseJSON(message.data);
+
+        if(data.body){
+            console.log("switch socket");
+            this.createWebSocket.apply(this,["ws://localhost:9000/dataSocket",false]);
+
+        }
+
+    }
+
     preload() {
 
         // TODO investigate physics failure when websocket server is offline
         // TODO upgrade play framework to add wss support
-        this.websocket = new WebSocket("ws://localhost:9000/dataSocket");
+        this.createWebSocket.apply(this,["ws://localhost:9000/lobbySocket",true]);
 
-        this.websocket.onopen = function(evt) {
-            console.log("connection was opened");
-        };
-        this.websocket.onmessage = this.onMessage.bind(this);
-        this.websocket.onclose = function() {
-            console.log("connections was closed");
-        };
 
         this.jump_sound = this.add.audio("jump_sound",1.0,false);
         this.splash_sound = this.add.audio("splash_sound",1.0,false);
@@ -322,18 +360,6 @@ export class Arena extends Phaser.State {
 
     private continuallyRotatePlayerTwo(){
         this.player2.angle += 4;
-    }
-
-    //TODO implement switching to dataSocket
-    private onMessage(message){
-        var data = $.parseJSON(message.data);
-        if(data.header === "player"){
-            this.enemyObject = data.body;
-        } else if(data.header === "status"){
-            if (data.body)
-                console.log("switch socket");
-        }
-
     }
 
 }

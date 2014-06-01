@@ -23,16 +23,45 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.jump_tween = jump_tween;
             this.enemyObject = enemyObject;
         }
-        Arena.prototype.preload = function () {
-            this.websocket = new WebSocket("ws://localhost:9000/dataSocket");
+        Arena.prototype.createWebSocket = function (url, isLobby) {
+            this.websocket = new WebSocket(url);
 
-            this.websocket.onopen = function (evt) {
+            this.websocket.onopen = function () {
                 console.log("connection was opened");
             };
-            this.websocket.onmessage = this.onMessage.bind(this);
+            if (isLobby) {
+                console.log("lobby");
+                this.websocket.onmessage = this.onLobbyMessage.bind(this);
+            } else {
+                console.log("arena");
+                this.websocket.onmessage = this.onDataMessage.bind(this);
+            }
+
             this.websocket.onclose = function () {
                 console.log("connections was closed");
             };
+        };
+
+        Arena.prototype.onDataMessage = function (message) {
+            var data = $.parseJSON(message.data);
+            if (data.header === "error") {
+                console.log("error");
+            } else {
+                this.enemyObject = data.body;
+            }
+        };
+
+        Arena.prototype.onLobbyMessage = function (message) {
+            var data = $.parseJSON(message.data);
+
+            if (data.body) {
+                console.log("switch socket");
+                this.createWebSocket.apply(this, ["ws://localhost:9000/dataSocket", false]);
+            }
+        };
+
+        Arena.prototype.preload = function () {
+            this.createWebSocket.apply(this, ["ws://localhost:9000/lobbySocket", true]);
 
             this.jump_sound = this.add.audio("jump_sound", 1.0, false);
             this.splash_sound = this.add.audio("splash_sound", 1.0, false);
@@ -246,16 +275,6 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.continuallyRotatePlayerTwo = function () {
             this.player2.angle += 4;
-        };
-
-        Arena.prototype.onMessage = function (message) {
-            var data = $.parseJSON(message.data);
-            if (data.header === "player") {
-                this.enemyObject = data.body;
-            } else if (data.header === "status") {
-                if (data.body)
-                    console.log("switch socket");
-            }
         };
         return Arena;
     })(Phaser.State);
