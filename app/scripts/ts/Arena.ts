@@ -19,10 +19,12 @@ export class Arena extends Phaser.State {
                 public jump_sound : Phaser.Sound,
                 public splash_sound : Phaser.Sound,
                 public jump_tween : Phaser.Tween,
-                public enemyObject : any){
+                public enemyObject : any,
+                private game_id : number){
         super();
     }
 
+    //TODO integration test with server and multiple clients
     private createWebSocket(url,isLobby){
 
         this.websocket = new WebSocket(url);
@@ -47,23 +49,25 @@ export class Arena extends Phaser.State {
     private onDataMessage(message){
 
         var data = $.parseJSON(message.data);
+        console.log(data.body);
         if(data.header === "error"){
             console.log("error");
         } else {
             this.enemyObject = data.body;
         }
 
-
     }
 
     private onLobbyMessage(message){
 
         var data = $.parseJSON(message.data);
+        console.log("Game is Ready: " + message.data);
 
         if(data.body){
             console.log("switch socket");
+            this.game_id = data.game_id;
+            console.log("game_id: "+ this.game_id);
             this.createWebSocket.apply(this,["ws://localhost:9000/dataSocket",false]);
-
         }
 
     }
@@ -248,12 +252,20 @@ export class Arena extends Phaser.State {
     }
 
     private sendPlayerData(){
-        if(this.websocket.readyState === 1)
-            this.websocket.send(JSON.stringify({ "x"         : this.player.body.x ,
-                                                 "y"         : this.player.body.y ,
-                                                 "angle"     : this.player.angle,
-                                                 "isJumping" : this.player.isJumping,
-                                                 "shouldDie" : this.player.isDead()}));
+        if(this.websocket.readyState === 1){
+            this.websocket.send(JSON.stringify({ "header"    : "player",
+                                                 "game_id"   : this.game_id,
+                                                 "body"      : {
+
+                                                     "x"         : this.player.body.x ,
+                                                     "y"         : this.player.body.y ,
+                                                     "angle"     : this.player.angle,
+                                                     "isJumping" : this.player.isJumping,
+                                                     "shouldDie" : this.player.isDead()
+
+                                                 }
+                                                }));
+        }
     }
 
 

@@ -21,7 +21,6 @@ export class Game extends Phaser.Game{
         this.state.add('Arena',Arena.Arena,false);
         this.state.add('GameOverL',GameOverL.GameOverL,false);
         this.state.add('GameOverW',GameOverW.GameOverW,false);
-
         this.state.start('Boot');
 
     }

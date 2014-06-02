@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, enemyObject) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, enemyObject, game_id) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -22,6 +22,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.splash_sound = splash_sound;
             this.jump_tween = jump_tween;
             this.enemyObject = enemyObject;
+            this.game_id = game_id;
         }
         Arena.prototype.createWebSocket = function (url, isLobby) {
             this.websocket = new WebSocket(url);
@@ -44,6 +45,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.onDataMessage = function (message) {
             var data = $.parseJSON(message.data);
+            console.log(data.body);
             if (data.header === "error") {
                 console.log("error");
             } else {
@@ -53,9 +55,12 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.onLobbyMessage = function (message) {
             var data = $.parseJSON(message.data);
+            console.log("Game is Ready: " + message.data);
 
             if (data.body) {
                 console.log("switch socket");
+                this.game_id = data.game_id;
+                console.log("game_id: " + this.game_id);
                 this.createWebSocket.apply(this, ["ws://localhost:9000/dataSocket", false]);
             }
         };
@@ -183,13 +188,19 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
         };
 
         Arena.prototype.sendPlayerData = function () {
-            if (this.websocket.readyState === 1)
+            if (this.websocket.readyState === 1) {
                 this.websocket.send(JSON.stringify({
-                    "x": this.player.body.x,
-                    "y": this.player.body.y,
-                    "angle": this.player.angle,
-                    "isJumping": this.player.isJumping,
-                    "shouldDie": this.player.isDead() }));
+                    "header": "player",
+                    "game_id": this.game_id,
+                    "body": {
+                        "x": this.player.body.x,
+                        "y": this.player.body.y,
+                        "angle": this.player.angle,
+                        "isJumping": this.player.isJumping,
+                        "shouldDie": this.player.isDead()
+                    }
+                }));
+            }
         };
 
         Arena.prototype.updateEnemy = function () {

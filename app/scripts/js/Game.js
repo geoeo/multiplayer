@@ -15,7 +15,6 @@ define(["require", "exports", 'Boot', 'Preloader', 'Arena', 'GameOverL', 'GameOv
             this.state.add('Arena', Arena.Arena, false);
             this.state.add('GameOverL', GameOverL.GameOverL, false);
             this.state.add('GameOverW', GameOverW.GameOverW, false);
-
             this.state.start('Boot');
         }
         return Game;
