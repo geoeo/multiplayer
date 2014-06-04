@@ -210,7 +210,8 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             var isJumping = this.enemyObject.isJumping;
             var shouldDie = this.enemyObject.shouldDie;
 
-            this.player2.body.velocity = new Phaser.Point(x, y);
+            this.player2.body.x = x;
+            this.player2.body.y = y;
             this.player2.angle = angle;
             this.player2.shouldDie = shouldDie;
 
