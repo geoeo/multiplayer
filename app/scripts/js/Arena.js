@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 define(["require", "exports", 'Player'], function(require, exports, Player) {
     var Arena = (function (_super) {
         __extends(Arena, _super);
-        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, enemyObject, game_id) {
+        function Arena(map, groundLayer, arenaLayer, player, player2, cursors, currentSpeed, deathTimer, websocket, jump_sound, splash_sound, jump_tween, enemyObject, game_id, players_ready) {
             _super.call(this);
             this.map = map;
             this.groundLayer = groundLayer;
@@ -23,6 +23,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             this.jump_tween = jump_tween;
             this.enemyObject = enemyObject;
             this.game_id = game_id;
+            this.players_ready = players_ready;
         }
         Arena.prototype.createWebSocket = function (url, isLobby) {
             this.websocket = new WebSocket(url);
@@ -45,7 +46,7 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.onDataMessage = function (message) {
             var data = $.parseJSON(message.data);
-            console.log(data.body);
+
             if (data.header === "error") {
                 console.log("error");
             } else {
@@ -55,17 +56,25 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
         Arena.prototype.onLobbyMessage = function (message) {
             var data = $.parseJSON(message.data);
-            console.log("Game is Ready: " + message.data);
 
             if (data.body) {
                 console.log("switch socket");
                 this.game_id = data.game_id;
+
+                if (!data.playerOne) {
+                    console.log("Player two!");
+                    this.setUpPlayers(false);
+                } else {
+                    this.setUpPlayers(true);
+                }
                 console.log("game_id: " + this.game_id);
                 this.createWebSocket.apply(this, ["ws://localhost:9000/dataSocket", false]);
             }
         };
 
         Arena.prototype.preload = function () {
+            this.players_ready = false;
+
             this.createWebSocket.apply(this, ["ws://localhost:9000/lobbySocket", true]);
 
             this.jump_sound = this.add.audio("jump_sound", 1.0, false);
@@ -100,35 +109,51 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
 
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            this.player = new Player.Player(this.game, this.game.world.centerX, this.game.world.centerY, "player1", 3, 150, 0, 600, false, false);
-            this.player2 = new Player.Player(this.game, this.game.world.centerX + 50, this.game.world.centerY + 30, "player2", 3, 150, 0, 600, false, false);
+            this.enemyObject = {};
+
+            this.cursors = this.game.input.keyboard.createCursorKeys();
+        };
+
+        Arena.prototype.setUpPlayers = function (asPlayerOne) {
+            var yPosForPlayerOne = this.game.world.centerY + 30;
+            var yPosForPlayerTwo = this.game.world.centerY - 30;
+
+            if (!asPlayerOne) {
+                var temp = yPosForPlayerOne;
+                yPosForPlayerOne = yPosForPlayerTwo;
+                yPosForPlayerTwo = temp;
+            }
+
+            this.player = new Player.Player(this.game, this.game.world.centerX, yPosForPlayerOne, "player1", 3, 150, 0, 600, false, false);
+            this.player2 = new Player.Player(this.game, this.game.world.centerX, yPosForPlayerTwo, "player2", 3, 150, 0, 600, false, false);
 
             this.player.bringToTop();
-
-            this.enemyObject = {
-                "x": 0,
-                "y": 0,
-                "angle": 0,
-                "isJumping": false,
-                "shouldDie": false
-            };
 
             this.currentSpeed = 0;
 
             this.player.angle -= 90;
 
-            this.cursors = this.game.input.keyboard.createCursorKeys();
-
             this.jump_tween = this.game.add.tween(this.player.scale);
+
+            this.enemyObject = {
+                "angle": -90,
+                "velocity": this.player.body.velocity,
+                "isJumping": false,
+                "shouldDie": false
+            };
+
+            this.players_ready = true;
         };
 
         Arena.prototype.update = function () {
-            this.updateEnemy();
+            if (this.players_ready) {
+                this.handleUserInput();
+                this.updateEnemy();
 
-            this.handleCollisions();
-            this.handleOverlaps();
+                this.handleCollisions();
+                this.handleOverlaps();
+            }
 
-            this.handleUserInput();
             this.sendPlayerData();
         };
 
@@ -183,36 +208,37 @@ define(["require", "exports", 'Player'], function(require, exports, Player) {
             }
 
             if (this.currentSpeed != 0) {
-                this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
+                this.player.body.velocity = this.game.physics.arcade.velocityFromAngle(this.player.angle, this.currentSpeed);
             }
         };
 
         Arena.prototype.sendPlayerData = function () {
             if (this.websocket.readyState === 1) {
-                this.websocket.send(JSON.stringify({
-                    "header": "player",
-                    "game_id": this.game_id,
-                    "body": {
-                        "x": this.player.body.x,
-                        "y": this.player.body.y,
-                        "angle": this.player.angle,
-                        "isJumping": this.player.isJumping,
-                        "shouldDie": this.player.isDead()
-                    }
-                }));
+                if (this.players_ready)
+                    this.websocket.send(JSON.stringify({
+                        "header": "player",
+                        "game_id": this.game_id,
+                        "body": {
+                            "angle": this.player.angle,
+                            "velocity": this.player.body.velocity,
+                            "isJumping": this.player.isJumping,
+                            "shouldDie": this.player.isDead()
+                        }
+                    }));
+                else
+                    this.websocket.send(JSON.stringify({}));
             }
         };
 
         Arena.prototype.updateEnemy = function () {
-            var x = this.enemyObject.x;
-            var y = this.enemyObject.y;
             var angle = this.enemyObject.angle;
+
+            var velocity = this.enemyObject.velocity;
             var isJumping = this.enemyObject.isJumping;
             var shouldDie = this.enemyObject.shouldDie;
 
-            this.player2.body.x = x;
-            this.player2.body.y = y;
             this.player2.angle = angle;
+            this.player2.body.velocity = this.enemyObject.velocity;
             this.player2.shouldDie = shouldDie;
 
             if (isJumping && this.player2.timeToJump()) {

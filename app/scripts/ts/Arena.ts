@@ -20,7 +20,8 @@ export class Arena extends Phaser.State {
                 public splash_sound : Phaser.Sound,
                 public jump_tween : Phaser.Tween,
                 public enemyObject : any,
-                private game_id : number){
+                private game_id : number,
+                private players_ready : boolean){
         super();
     }
 
@@ -49,7 +50,7 @@ export class Arena extends Phaser.State {
     private onDataMessage(message){
 
         var data = $.parseJSON(message.data);
-        console.log(data.body);
+//        console.log(data.body);
         if(data.header === "error"){
             console.log("error");
         } else {
@@ -58,14 +59,23 @@ export class Arena extends Phaser.State {
 
     }
 
+    //TODO move lobby socket to loading screen
     private onLobbyMessage(message){
 
         var data = $.parseJSON(message.data);
-        console.log("Game is Ready: " + message.data);
+//        console.log("Game is Ready: " + message.data);
 
         if(data.body){
             console.log("switch socket");
             this.game_id = data.game_id;
+
+            if(!data.playerOne){
+                console.log("Player two!");
+                this.setUpPlayers(false);
+
+            } else {
+                this.setUpPlayers(true);
+            }
             console.log("game_id: "+ this.game_id);
             this.createWebSocket.apply(this,["ws://localhost:9000/dataSocket",false]);
         }
@@ -74,6 +84,8 @@ export class Arena extends Phaser.State {
 
     preload() {
 
+        this.players_ready = false;
+
         // TODO investigate physics failure when websocket server is offline
         // TODO upgrade play framework to add wss support
         this.createWebSocket.apply(this,["ws://localhost:9000/lobbySocket",true]);
@@ -81,7 +93,6 @@ export class Arena extends Phaser.State {
 
         this.jump_sound = this.add.audio("jump_sound",1.0,false);
         this.splash_sound = this.add.audio("splash_sound",1.0,false);
-
     }
 
     create() {
@@ -120,47 +131,74 @@ export class Arena extends Phaser.State {
 
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.player = new Player.Player(this.game,this.game.world.centerX,this.game.world.centerY,"player1",3,150,0,600,false,false);
-        this.player2 = new Player.Player(this.game,this.game.world.centerX+50,this.game.world.centerY+30,"player2",3,150,0,600,false,false);
+        this.enemyObject ={ };
+
+        // CONTROLL STUFF //
+
+        this.cursors = this.game.input.keyboard.createCursorKeys();
+
+
+    }
+
+    private setUpPlayers(asPlayerOne){
+
+        var yPosForPlayerOne = this.game.world.centerY+30;
+        var yPosForPlayerTwo = this.game.world.centerY-30;
+
+        if(!asPlayerOne){
+
+            var temp = yPosForPlayerOne;
+            yPosForPlayerOne = yPosForPlayerTwo;
+            yPosForPlayerTwo = temp;
+
+        }
+
+        this.player = new Player.Player(this.game,this.game.world.centerX,yPosForPlayerOne,"player1",3,150,0,600,false,false);
+        this.player2 = new Player.Player(this.game,this.game.world.centerX,yPosForPlayerTwo,"player2",3,150,0,600,false,false);
 
         // Set player's sprite to be rendered on top of player2's sprite
         this.player.bringToTop();
-
-        this.enemyObject =
-            {
-                "x" : 0,
-                "y" : 0,
-                "angle" : 0,
-                "isJumping" : false,
-                "shouldDie" : false
-
-            };
 
         this.currentSpeed = 0;
 
         // rotate so that key controls match up
         this.player.angle -= 90;
 
-        // CONTROLL STUFF //
-
-        this.cursors = this.game.input.keyboard.createCursorKeys();
-
         // ANIMATION STUFF ///
 
         this.jump_tween = this.game.add.tween(this.player.scale);
+
+        this.enemyObject =
+        {
+            "angle" : -90,
+            "velocity" : this.player.body.velocity,
+            "isJumping" : false,
+            "shouldDie" : false
+
+        };
+
+        this.players_ready = true;
 
     }
 
     update(){
 
-        this.updateEnemy();
+        if(this.players_ready){
 
-        //  Collide the player with the platforms
-        this.handleCollisions();
-        this.handleOverlaps();
+            this.handleUserInput();
+            this.updateEnemy();
 
-        this.handleUserInput();
+            //  Collide the player with the platforms
+            this.handleCollisions();
+            this.handleOverlaps();
+
+        }
+
+        // Have to send outside of if statement, else server wont get triggered
         this.sendPlayerData();
+
+
+
     }
 
     render() {
@@ -247,24 +285,25 @@ export class Arena extends Phaser.State {
 
         if (this.currentSpeed != 0)
         {
-            this.player.body.velocity = this.game.physics.arcade.velocityFromRotation(this.player.rotation, this.currentSpeed);
+            this.player.body.velocity = this.game.physics.arcade.velocityFromAngle(this.player.angle, this.currentSpeed);
         }
     }
 
     private sendPlayerData(){
         if(this.websocket.readyState === 1){
-            this.websocket.send(JSON.stringify({ "header"    : "player",
+            if(this.players_ready)
+                this.websocket.send(JSON.stringify({ "header"    : "player",
                                                  "game_id"   : this.game_id,
                                                  "body"      : {
 
-                                                     "x"         : this.player.body.x ,
-                                                     "y"         : this.player.body.y ,
                                                      "angle"     : this.player.angle,
+                                                     "velocity" : this.player.body.velocity,
                                                      "isJumping" : this.player.isJumping,
                                                      "shouldDie" : this.player.isDead()
-
                                                  }
                                                 }));
+            else
+                this.websocket.send(JSON.stringify({}));
         }
     }
 
@@ -272,15 +311,20 @@ export class Arena extends Phaser.State {
     // read out the most recent data stored in the enemy json object
     private updateEnemy(){
 
-        var x : any = this.enemyObject.x;
-        var y : any = this.enemyObject.y;
+
         var angle : any = this.enemyObject.angle;
+        // referencing this variable will give an error (???)
+        var velocity : any = this.enemyObject.velocity;
         var isJumping : any = this.enemyObject.isJumping;
         var shouldDie : any = this.enemyObject.shouldDie;
+//        var timeStamp : Date = new Date(this.enemyObject.timeStamp);
+//
+//        if(timeStamp > this.current_enemy_data){
+//            console.log("fresh timestamp - updating enemy data");
+//        }
 
-        this.player2.body.x = x;
-        this.player2.body.y = y;
         this.player2.angle = angle;
+        this.player2.body.velocity = this.enemyObject.velocity;
         this.player2.shouldDie = shouldDie;
 
         if(isJumping && this.player2.timeToJump()){
